@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title></title>
+		<script src="../js/mui.min.js"></script>
+	<!--	<script src="https://cdn.wilddog.com/js/client/current/wilddog.js"></script>  -->
+		<link href="../css/mui.min.css" rel="stylesheet" />
+		<script type="text/javascript" charset="utf-8">
+			mui.init();
+		</script>
+		<style type="text/css">
+			.title{
+				background-color: rgba(0,0,0,.25);
+				font-weight: 400;
+			}
+			
+			#list td{
+				padding:5px 5px;
+			}
+			
+			#list tr:active{
+				background-color: rgba(0,0,0,.25);
+			}
+
+			
+			#popover{
+				min-width: 282px;
+				height: 400px ;
+				top:40% !important;
+				margin-top: -150px;
+				left: 50% !important;
+				margin-left: -141px;
+			}
+			
+			@media (min-width: 400px){
+				#popover{
+					width: 80%;
+					margin-left: -40%;
+				}
+			}
+			
+			.mui-popover .mui-popover-arrow{
+				display: none !important;
+			}
+			
+			.operate{
+				text-align: center;
+				margin-top: 20px
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<a class="mui-icon mui-icon-plusempty mui-pull-right" id="open"></a>
+			<h1 class="mui-title">投资记录</h1>
+		</header>
+		<div class="mui-content">
+			<div class="mui-content-padded mui-collapse">
+				<p style="text-indent: 22px;">
+					当前总金额   <span  id="fareCount">0</span> ;
+					活期总金额   <span  id="hqCount"></span>;
+					定期总金额   <span  id="dqCount"></span>
+				</p>
+				
+			</div>
+				<ul class="mui-table-view">
+				<li class="mui-table-view-cell mui-collapse">
+					<a class="mui-navigate-right" href="#">数据管理</a>
+					<div class="mui-collapse-content">
+						<div id="shgjj_gzf"> 
+						  <input type="button" value="数据导入"  id="importBtn"  />
+						</div>
+								
+					</div>
+				</li>
+			</ul>
+			<div style="background-color: #fff;padding-bottom: 15px;">
+				<div class="mui-content-padded" >
+					<h4 style="text-align: center;margin-bottom: 15px;padding-top: 15px;">明细列表</h4>
+					<table id="list" border="1" width="100%" style="padding: 5px 10px;text-align: center;" >
+						
+					</table>
+				</div>
+			</div>
+			
+		</div>
+		
+		
+		<div id="popover" class="mui-popover"  style="top:100px;position:fixed;font-weight: 200;">
+			<div class="mui-popover-arrow" ></div>
+			<div class="mui-content-padded" >
+				<h4 id="title" style="text-align: center;margin-top: 10px;">新增数据</h4>
+				<form class="mui-input-group" style="margin-top: 10px;">
+					<div class="mui-input-row">
+						<label>名称：</label>
+						<input type="text" class="mui-input-clear" id="col1" placeholder="请输入">
+					</div>
+					<div class="mui-input-row">
+						<label>投资金额：</label>
+						<input type="text" class="mui-input-clear" id="col2" placeholder="请输入">
+					</div>
+					<div class="mui-input-row">
+						<label>定活类别：</label>
+						<input type="text" class="mui-input-clear" id="col3" placeholder="请输入">
+					</div>
+					<div class="mui-input-row">
+						<label>利率：</label>
+						<input type="text" class="mui-input-clear" id="col4" placeholder="请输入">
+					</div>
+					<div class="mui-input-row">
+						<label>期限：</label>
+						<input type="text" class="mui-input-clear" id="col5" placeholder="请输入">
+					</div>
+					<div class="mui-input-row">
+						<label>备注1：</label>
+						<input type="text" class="mui-input-clear" id="col6" placeholder="请输入">
+					</div>
+					<div class="mui-input-row">
+						<label>备注2：</label>
+						<input type="text" class="mui-input-clear" id="col7" placeholder="请输入">
+					</div>
+				</form>
+				<div id="add_div" class="operate mui-hidden">
+					<button type="button" class="mui-btn mui-btn-blue" id="add">确定</button>
+				</div>
+				<div id="edit_div" class="operate mui-hidden">
+					<button type="button" class="mui-btn mui-btn-blue" id="update" style="margin-right: 30px;">修改</button>
+					<button type="button" class="mui-btn mui-btn-red" id="del">删除</button>
+				</div>
+			</div>
+		</div>
+		
+		<script type="text/javascript">
+		
+			function trim(str){ //删除左右两端的空格
+		　　     return str.replace(/(^\s*)|(\s*$)/g, "");
+		　　 }
+		
+		
+			var network = false;
+			var ref = null;
+			var shoppingItems=null;
+			mui.plusReady(function () {
+				if(plus.networkinfo.getCurrentType() == plus.networkinfo.CONNECTION_NONE){
+					mui.toast("当前网络不给力，无法连接云端数据库~");
+				}else{
+					network = true;
+				//	ref = new Wilddog("https://muidemo.wilddogio.com/demo");
+				    shoppingItems= eval(plus.storage.getItem("investUtil") )         ;
+//				    alert(JSON.stringify(shoppingItems));
+				    console.log(shoppingItems);
+					getList();
+				}
+			});
+
+			var list = document.getElementById("list");
+			var col1 = document.getElementById("col1");
+			var col2 = document.getElementById("col2");
+			var col3 = document.getElementById("col3");
+			var col4 = document.getElementById("col4");
+			var col5 = document.getElementById("col5");
+			var col6 = document.getElementById("col6");
+			var col7 = document.getElementById("col7");
+			var add_div = document.getElementById("add_div");
+			var edit_div = document.getElementById("edit_div");
+
+			var title = document.getElementById("title");
+            
+            var fare_count=document.getElementById("fareCount");
+            var hqCountE=document.getElementById("hqCount");
+            var dqCountE=document.getElementById("dqCount");
+            
+            
+
+			document.getElementById("open").addEventListener('tap',function () {
+				if(false){
+					mui.toast("当前网络不给力，请稍后再试");
+				}else{
+					//清空数据
+					col1.value = "";
+					col2.value = "";
+					col3.value = "";
+					col4.value = "";
+					col5.value = "";
+					col6.value = "";
+					col7.value = "";
+					title.innerHTML = "新增数据";
+					add_div.classList.remove("mui-hidden");
+					if(!edit_div.classList.contains("mui-hidden")){
+						edit_div.classList.add("mui-hidden");
+					}
+					mui("#popover").popover("toggle");
+				}
+			});
+			
+			
+			document.getElementById("add").addEventListener('tap', function() {
+				if(false){
+					mui.toast("当前网络不给力，请稍后再试");
+				}else{
+					var check = true;
+					var count1=0;
+					mui(".mui-input-group input").each(function () {
+						if(++count1>2)  return false;
+						if(!this.value||trim(this.value)==""){
+							var label = this.previousElementSibling;
+							mui.alert(label.innerText+"不允许为空");
+							check = false;
+							return false;
+						}
+					});
+					if(check){
+						if(shoppingItems==null)   shoppingItems=[];
+						var newRef = shoppingItems.push({
+							"col1": col1.value,
+							"col2": col2.value,
+							"col3": col3.value,
+							"col4": col4.value,
+							"col5": col5.value,
+							"col6": col6.value,
+							"col7": col7.value,
+						});
+//						alert(JSON.stringify(shoppingItems));
+                        mui.toast(wechatSetting.shoppingItems);
+						plus.storage.setItem("investUtil",JSON.stringify(shoppingItems) );
+//						alert(2);
+						add_div.classList.add("mui-hidden");
+						//关闭modal
+						mui("#popover").popover("toggle");
+						mui.toast("添加成功~");
+						//刷新界面
+						getList();
+					}
+				}
+				
+			});
+			document.getElementById("update").addEventListener("tap", function() {
+				var check = true;
+				var count2=0;
+				mui(".mui-input-group input").each(function () {
+					if(++count2>2)  return false;
+					if(!this.value||trim(this.value)==""){
+						var label = this.previousElementSibling;
+						mui.alert(label.innerText+"不允许为空");
+						check = false;
+						return false;
+					}
+				});
+				if(check){
+					var id = document.getElementById("col1").getAttribute("demoid");
+					//alert(id);
+					var newRef={
+						"col1": col1.value,
+						"col2": col2.value,
+						"col3": col3.value,
+						"col4": col4.value,
+						"col5": col5.value,
+						"col6": col6.value,
+						"col7": col7.value,
+					};
+					shoppingItems[id]=newRef;
+					plus.storage.setItem("investUtil",JSON.stringify(shoppingItems) );
+				//	alert(JSON.stringify(newRef ));
+					//关闭modal
+					mui("#popover").popover("toggle");
+					edit_div.classList.add("mui-hidden");
+					mui.toast("修改成功~");
+					//刷新界面
+					getList();
+				}
+			})
+			document.getElementById("del").addEventListener("tap", function() {
+				var id = document.getElementById("col1").getAttribute("demoid");
+				shoppingItems.splice(id,1);
+				alert("删除前==="+JSON.stringify(shoppingItems));
+//				shoppingItems.remove(id);
+				plus.storage.setItem("investUtil",JSON.stringify(shoppingItems) );
+				alert("删除后==="+JSON.stringify(shoppingItems));
+				//关闭modal
+				mui("#popover").popover("toggle");
+				if(!edit_div.classList.contains("mui-hidden")){
+					edit_div.classList.add("mui-hidden");
+				}
+				mui.toast("删除成功~");
+				//刷新界面
+				getList();
+			})
+			//列表事件绑定，点击编辑数据
+			 mui("#list").on("tap", "tr", function() {
+			 	var id = this.getAttribute("id");
+			 	if(id){
+			 		document.getElementById("col1").value = this.querySelector(".col1").innerHTML;
+					document.getElementById("col2").value = this.querySelector(".col2").innerHTML;
+					document.getElementById("col3").value = this.querySelector(".col3").innerHTML;
+					document.getElementById("col4").value = this.querySelector(".col4").innerHTML;
+					document.getElementById("col1").setAttribute("demoid", id);
+					title.innerHTML = "编辑数据";
+					if(!add_div.classList.contains("mui-hidden")){
+						add_div.classList.add("mui-hidden");
+					}
+					edit_div.classList.remove("mui-hidden");
+					mui("#popover").popover("toggle");
+			 	}
+				
+			})
+			 
+			 
+			 document.getElementById("importBtn").addEventListener('tap',function () {
+					 plus.io.resolveLocalFileSystemURL( "../storage/sdcard0/gzf/zwcx.txt", function( entry ) {
+			            entry.file( function(file){
+						// create a FileWriter to write to the file
+						var fileReader = new plus.io.FileReader();
+						//	alert("getFile:" + JSON.stringify(file));
+							fileReader.readAsText(file, 'utf-8');
+							fileReader.onloadend = function(evt) {
+								alert(evt.target.result);
+								shoppingItems=eval(evt.target.result);
+								plus.storage.setItem("investUtil",JSON.stringify(shoppingItems) );
+								getList();
+							};
+					      });	
+					}, function ( e ) {
+						alert( "Resolve file URL failed: " + e.message );
+					} );
+			       });
+			 
+			 
+				/**
+				 * 获取最新记录
+				 */
+
+			function getList() {
+//				ref.once("value", function(snapshot) {
+	                var fareCount=0;
+	                var hqCount=0;
+	                var dqCount=0;
+					list.innerHTML = "<tr class='title'><td>名称</td><td>投资金额</td><td>定活类别</td><td>利率</td></tr>";
+					var result = shoppingItems;
+//					alert(result);
+					mui.each(result, function(key, elem) {
+						if(elem==null)  {
+							return true;
+						}
+						var li = document.createElement("tr");
+						fareCount+= parseInt( elem.col2);
+						if(elem.col3=='活期'){
+							hqCount+=parseInt( elem.col2);
+						}else if(elem.col3=='定期'){
+							dqCount+=parseInt( elem.col2);
+							li.setAttribute("style","background-color: #F0AD4E;");
+						}else{
+							li.style.backgroundColor = '#DDFFDD';
+						}
+						
+						li.setAttribute("id", key);
+						var col1 = document.createElement("td");
+						col1.className = "col1"
+						col1.innerHTML = elem.col1;
+						li.appendChild(col1);
+						var col2 = document.createElement("td");
+						col2.className = "col2"
+						col2.innerHTML = elem.col2;
+						li.appendChild(col2);
+						var col3 = document.createElement("td");
+						col3.className = "col3"
+						col3.innerHTML = elem.col3;
+						li.appendChild(col3);
+						list.appendChild(li);
+						var col4 = document.createElement("td");
+						col4.className = "col4"
+						col4.innerHTML = elem.col4;
+						li.appendChild(col4);
+						list.appendChild(li);
+					});
+//				});
+
+                   fare_count.innerHTML=fareCount;
+                   hqCountE.innerHTML=hqCount;
+                   dqCountE.innerHTML=dqCount;
+                   
+                   
+                   plus.io.resolveLocalFileSystemURL( "../storage/sdcard0/gzf/zwcx.txt", function( entry ) {
+						// create a FileWriter to write to the file
+						entry.createWriter( function ( writer ) {
+							// Write data to file.
+							if(shoppingItems!=null)
+							writer.write( JSON.stringify(shoppingItems) );
+						}, function ( e ) {
+							alert( e.message );
+						} );
+		           }, function ( e ) {
+			      alert( "Resolve file URL failed: " + e.message );
+		         } );
+		        // file write end
+		
+			}
+			
+			
+			
+			
+			
+			
+			
+			Array.prototype.remove=function(dx) 
+				{ 
+				    if(isNaN(dx)||dx>this.length){return false;} 
+				    for(var i=0,n=0;i<this.length;i++) 
+				    { 
+				        if(this[i]!=this[dx]) 
+				        { 
+				            this[n++]=this[i] ;
+				        } 
+				    } 
+				    this.length-=1 ;
+				} 
+			
+			
+			
+		</script>
+	</body>
+
+</html>
