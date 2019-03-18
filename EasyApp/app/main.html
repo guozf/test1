@@ -53,6 +53,14 @@ td{
 					</a>
 				</li>
 				
+				</li>
+					<li class="mui-table-view-cell"  id="wangdai">
+					<a class="mui-navigate-right"  >
+						网贷助手
+					</a>
+				</li>
+				
+				
 				</ul>
 				
 				
@@ -116,6 +124,7 @@ td{
 		var vxdh_li=doc.getElementById('wxdh');
 		var examples_li=doc.getElementById('examples');
 		var txbj_li=doc.getElementById('txbj');
+		var wangdai_li=doc.getElementById('wangdai');
 //		$.fire(shgjjPage, 'show', null);
 		//settingButton.style.display = settings.autoLogin ? 'block' : 'none';
 		shgjjPage_li.addEventListener('tap', function(event) {
@@ -215,6 +224,18 @@ td{
 				});
 			
 		});
+		//网贷小助手
+		wangdai_li.addEventListener('tap', function(event) {
+		    mui.openWindow({
+				url:"wangdai.html",
+				extras:{
+				name:'mui',
+				version:'0.5.8'
+				} 
+				});
+			
+		});
+		
 		
 		
 		//--

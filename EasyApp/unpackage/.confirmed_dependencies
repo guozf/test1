@@ -144,7 +144,8 @@
 			"app/cszs1.html",
 			"app/zwcx1.html",
 			"app/txbj.html",
-			"app/im-chat.html"
+			"app/im-chat.html",
+			"app/wangdai.html"
 		]
 	},
 	"app/zwcx.html": {
@@ -256,5 +257,13 @@
 			"css/mui.min.css"
 		],
 		"refer": []
+	},
+	"app/wangdai.html": {
+		"resources": [
+			"js/app.js",
+			"js/mui.min.js",
+			"fonts/mui.ttf",
+			"css/mui.min.css"
+		]
 	}
 }
